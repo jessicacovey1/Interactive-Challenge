@@ -33,11 +33,9 @@ function loadCharts(id) {
     console.log(selectedData); //see if we have isolated the data object we want to find
     //we only want the key:values for the data for the selected id and only the first 10
 
-    var slice = selectedData.slice(0, 10);
-
-    var otuids_slice = slice[0].otu_ids;
-    var samplevalues_slice = slice[0].sample_values;
-    var otulabels_slice = slice[0].otu_labels;
+    var otuids_slice = selectedData[0].otu_ids.slice(0,10).map(x => `OTU ${x}`).reverse();
+    var samplevalues_slice = selectedData[0].sample_values.slice(0,10).reverse();
+    var otulabels_slice = selectedData[0].otu_labels.slice(0,10).reverse();
 
     console.log(otuids_slice);
     console.log(samplevalues_slice);
@@ -63,11 +61,11 @@ function loadCharts(id) {
 
     // Create your trace.
     var tracebar = {
-      x: otuids_slice,
-      y: samplevalues_slice,
+      x: samplevalues_slice,
+      y: otuids_slice,
       type: "bar",
       orientation: 'h',
-      labels: otulabels_slice
+      text: otulabels_slice
     };
 
     // Create the data array for our plot
@@ -92,9 +90,9 @@ function loadCharts(id) {
       y: samplevalues,
       mode: 'markers',
       marker: {
-        color: [`$(otuids)`],
-        size: [`$(samplevalues)`],
-        text: [`$(otulabels)`]
+        color: otuids,
+        size: samplevalues,
+        text: otulabels
       }
     };
 
@@ -103,8 +101,10 @@ function loadCharts(id) {
     var layout = {
       title: 'Marker Size and Color',
       showlegend: false,
-      height: 600,
-      width: 600
+      margin: {
+        t: 30,
+        l: 150
+      }
     };
 
     Plotly.newPlot('bubble', data, layout);
@@ -115,30 +115,23 @@ function loadCharts(id) {
     //loop through this object and print the key:value 
     //can do it as a table with rows and columns or simpler is just APPEND the 'h5' tag with the key and value
     //still have to filter the meta data
-    // var selectedMetaData = data.metadata.filter(obj => obj.id == id)
-    // console.log(selectedMetaData)
-
-    // function buildTable(selectedMetaData) {
-    //   var table = d3.select("#sample-metadata");
-    //   var tbody = table.select("h3");
-    //   var trow;
-    //     for (var i = 0; i < 12; i++) {
-    //       trow = tbody.append("tr");
-    //       trow.append("td").text(id[i]);
-    //       trow.append("td").text(ethnicity[i]);
-    //       trow.append("td").text(gender[i]);
-    //       trow.append("td").text(age[i]);
-    //       trow.append("td").text(location[i]);
-    //       trow.append("td").text(bbtype[i]);
-    //       trow.append("td").text(wfreq[i]);
-    //     }
-    // }
-
-    // buildTable(selectedMetaData)
+    
 
   });
 
 }
+
+function buildTable(id) {
+  d3.json("samples.json").then((data) => {  
+  var selectedMetaData = data.metadata.filter(obj => obj.id == id)[0]
+  var panel = d3.select("#sample-metadata")
+  panel.html("")
+  Object.entries(selectedMetaData).forEach (([key,value]) => {
+    panel.append("h6").text(`${key}: ${value}`);
+  });
+  
+    })
+    }
 //DROPDOWN
 
 // look at html  for ids for charts  and drop down  selDataset need d3 reference to drop down
@@ -162,6 +155,7 @@ d3.json("samples.json").then((data) => {
   var id = data.names[0];  //index into the array of names and choose the first one
 
   loadCharts(id)
+  buildTable(id)
 });
 
 //what do we do next  - 940 is the first thing in the data that loads
@@ -176,6 +170,7 @@ d3.json("samples.json").then((data) => {
 function optionChanged(selectedID) {
 
   loadCharts(selectedID)
+  buildTable(selectedID)
 
 }
 
